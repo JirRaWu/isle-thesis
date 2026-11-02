@@ -142,5 +142,3 @@ export function resolveTemplate(id: string, records: CustomTemplateRecord[] = lo
   if (custom) return materializeCustom(custom);
   return getBuiltinTemplate(id);
 }
-
-export { GENERIC_GB };
