@@ -1,4 +1,5 @@
 export { parseDocx } from "./parse";
+export { describeApplied, fixDocx, type FixResult } from "./fix";
 export type { DocModel, DocParagraph, PageBox, RunProps, StyleDef } from "./model";
 export {
   A4_HEIGHT_TWIP,

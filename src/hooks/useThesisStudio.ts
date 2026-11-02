@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { TEMPLATE_STORAGE_KEY } from "@/config/constants";
 import { runChecks } from "@/lib/check";
-import { parseDocx, type DocModel } from "@/lib/docx";
+import { describeApplied, fixDocx, parseDocx, type DocModel } from "@/lib/docx";
 import { getTemplate, THESIS_TEMPLATES } from "@/lib/templates";
 import type { CheckIssue, CheckReport, IssueCategory, IssueSeverity } from "@/types/thesis";
 
@@ -18,10 +18,13 @@ export type StudioPhase = "idle" | "parsing" | "ready" | "error";
 export function useThesisStudio() {
   const [templateId, setTemplateIdState] = useState(loadTemplateId);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [sourceBuffer, setSourceBuffer] = useState<ArrayBuffer | null>(null);
   const [model, setModel] = useState<DocModel | null>(null);
   const [report, setReport] = useState<CheckReport | null>(null);
   const [phase, setPhase] = useState<StudioPhase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [fixing, setFixing] = useState(false);
+  const [fixNote, setFixNote] = useState<string | null>(null);
   const [severityFilter, setSeverityFilter] = useState<IssueSeverity | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<IssueCategory | "all">("all");
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
@@ -47,10 +50,12 @@ export function useThesisStudio() {
 
   const reset = useCallback(() => {
     setFileName(null);
+    setSourceBuffer(null);
     setModel(null);
     setReport(null);
     setPhase("idle");
     setError(null);
+    setFixNote(null);
     setActiveIssueId(null);
   }, []);
 
@@ -58,15 +63,19 @@ export function useThesisStudio() {
     async (file: File) => {
       setPhase("parsing");
       setError(null);
+      setFixNote(null);
       setFileName(file.name);
       try {
-        const parsed = await parseDocx(file, file.name);
+        const buffer = await file.arrayBuffer();
+        const parsed = await parseDocx(new Blob([buffer]), file.name);
         const nextReport = runChecks(parsed, getTemplate(templateId));
+        setSourceBuffer(buffer);
         setModel(parsed);
         setReport(nextReport);
         setActiveIssueId(nextReport.issues[0]?.id ?? null);
         setPhase("ready");
       } catch (err) {
+        setSourceBuffer(null);
         setModel(null);
         setReport(null);
         setPhase("error");
@@ -75,6 +84,37 @@ export function useThesisStudio() {
     },
     [templateId],
   );
+
+  const downloadFixed = useCallback(async () => {
+    if (!sourceBuffer || !fileName) return;
+    setFixing(true);
+    setError(null);
+    try {
+      const tpl = getTemplate(templateId);
+      const result = await fixDocx(sourceBuffer, tpl, fileName);
+      const url = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = result.fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      // Re-check the fixed file so the UI reflects the improvement.
+      const parsed = await parseDocx(result.blob, result.fileName);
+      const nextReport = runChecks(parsed, tpl);
+      const nextBuffer = await result.blob.arrayBuffer();
+      setSourceBuffer(nextBuffer);
+      setFileName(result.fileName);
+      setModel(parsed);
+      setReport(nextReport);
+      setActiveIssueId(nextReport.issues[0]?.id ?? null);
+      setFixNote(`已下载「${result.fileName}」。已应用：${describeApplied(result.applied).join("、")}。`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "修复失败");
+    } finally {
+      setFixing(false);
+    }
+  }, [sourceBuffer, fileName, templateId]);
 
   const filteredIssues: CheckIssue[] = useMemo(() => {
     if (!report) return [];
@@ -112,6 +152,10 @@ export function useThesisStudio() {
     error,
     analyze,
     reset,
+    downloadFixed,
+    fixing,
+    fixNote,
+    canFix: !!sourceBuffer,
     severityFilter,
     setSeverityFilter,
     categoryFilter,

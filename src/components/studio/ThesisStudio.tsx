@@ -68,6 +68,10 @@ export function ThesisStudio() {
         <div className="space-y-4">
           <ScoreSummary
             report={studio.report}
+            canFix={studio.canFix}
+            fixing={studio.fixing}
+            fixNote={studio.fixNote}
+            onFix={() => void studio.downloadFixed()}
             onExport={() => downloadReport(studio.report!)}
             onReset={studio.reset}
           />
