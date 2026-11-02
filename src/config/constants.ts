@@ -4,11 +4,14 @@ export const ACCEPTED_DOCX_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
-export const ISLE_CV_ORIGIN =
-  (import.meta.env.VITE_ISLE_CV_ORIGIN as string | undefined) ?? "https://isle-cv.hhtj.cn";
+const viteEnv =
+  typeof import.meta !== "undefined" && import.meta.env
+    ? import.meta.env
+    : ({} as ImportMetaEnv);
 
-export const ISLE_PHOTO_ORIGIN =
-  (import.meta.env.VITE_ISLE_PHOTO_ORIGIN as string | undefined) ?? "https://isle-photo.hhtj.cn";
+export const ISLE_CV_ORIGIN = viteEnv.VITE_ISLE_CV_ORIGIN ?? "https://isle-cv.hhtj.cn";
+
+export const ISLE_PHOTO_ORIGIN = viteEnv.VITE_ISLE_PHOTO_ORIGIN ?? "https://isle-photo.hhtj.cn";
 
 export const TEMPLATE_STORAGE_KEY = "isle-thesis-template-id";
 export const CUSTOM_TEMPLATES_KEY = "isle-thesis-custom-templates";
