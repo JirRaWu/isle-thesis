@@ -11,4 +11,5 @@ export const ISLE_PHOTO_ORIGIN =
   (import.meta.env.VITE_ISLE_PHOTO_ORIGIN as string | undefined) ?? "https://isle-photo.hhtj.cn";
 
 export const TEMPLATE_STORAGE_KEY = "isle-thesis-template-id";
+export const CUSTOM_TEMPLATES_KEY = "isle-thesis-custom-templates";
 export const AI_STORAGE_KEY = "isle-thesis-ai-config";

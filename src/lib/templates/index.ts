@@ -1,13 +1,18 @@
-import type { ThesisTemplate } from "../../types/thesis";
-import { GENERIC_GB } from "./generic-gb";
-import { PKU } from "./pku";
-import { THU } from "./thu";
-import { ZJU } from "./zju";
+export { getBuiltinTemplate, GENERIC_GB, PKU, THESIS_TEMPLATES, THU, ZJU } from "./builtins";
+export {
+  createRecordFromTemplate,
+  deleteCustomRecord,
+  listAllTemplates,
+  loadCustomRecords,
+  materializeCustom,
+  resolveTemplate,
+  upsertCustomRecord,
+  type CustomTemplateRecord,
+} from "./custom";
 
-export const THESIS_TEMPLATES: ThesisTemplate[] = [GENERIC_GB, ZJU, THU, PKU];
+import { resolveTemplate } from "./custom";
 
-export function getTemplate(id: string): ThesisTemplate {
-  return THESIS_TEMPLATES.find((item) => item.id === id) ?? GENERIC_GB;
+/** Resolve built-in or custom template by id. */
+export function getTemplate(id: string) {
+  return resolveTemplate(id);
 }
-
-export { GENERIC_GB, PKU, THU, ZJU };

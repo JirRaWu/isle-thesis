@@ -7,6 +7,7 @@ import { DocPreview } from "./DocPreview";
 import { IssueDetail } from "./IssueDetail";
 import { IssueList } from "./IssueList";
 import { ScoreSummary } from "./ScoreSummary";
+import { TemplateEditor } from "./TemplateEditor";
 import { TemplatePicker } from "./TemplatePicker";
 import { UploadDropzone } from "./UploadDropzone";
 
@@ -25,6 +26,9 @@ export function ThesisStudio() {
               templates={studio.templates}
               value={studio.templateId}
               onChange={studio.setTemplateId}
+              onCreateCustom={studio.openCreateCustom}
+              onEditCustom={studio.openEditCustom}
+              onDeleteCustom={studio.removeCustom}
             />
           </div>
 
@@ -104,6 +108,12 @@ export function ThesisStudio() {
         onUpdate={ai.update}
         onSwitchProvider={ai.switchProvider}
         onReset={ai.reset}
+      />
+      <TemplateEditor
+        open={studio.editorOpen}
+        draft={studio.editorDraft}
+        onClose={studio.closeEditor}
+        onSave={studio.saveCustom}
       />
     </section>
   );

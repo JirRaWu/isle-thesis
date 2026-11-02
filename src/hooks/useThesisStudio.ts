@@ -2,7 +2,15 @@ import { useCallback, useMemo, useState } from "react";
 import { TEMPLATE_STORAGE_KEY } from "@/config/constants";
 import { runChecks } from "@/lib/check";
 import { describeApplied, fixDocx, parseDocx, type DocModel } from "@/lib/docx";
-import { getTemplate, THESIS_TEMPLATES } from "@/lib/templates";
+import {
+  createRecordFromTemplate,
+  deleteCustomRecord,
+  listAllTemplates,
+  loadCustomRecords,
+  resolveTemplate,
+  upsertCustomRecord,
+  type CustomTemplateRecord,
+} from "@/lib/templates";
 import type { CheckIssue, CheckReport, IssueCategory, IssueSeverity } from "@/types/thesis";
 
 function loadTemplateId() {
@@ -16,6 +24,13 @@ function loadTemplateId() {
 export type StudioPhase = "idle" | "parsing" | "ready" | "error";
 
 export function useThesisStudio() {
+  const [customRecords, setCustomRecords] = useState<CustomTemplateRecord[]>(() => {
+    try {
+      return loadCustomRecords();
+    } catch {
+      return [];
+    }
+  });
   const [templateId, setTemplateIdState] = useState(loadTemplateId);
   const [fileName, setFileName] = useState<string | null>(null);
   const [sourceBuffer, setSourceBuffer] = useState<ArrayBuffer | null>(null);
@@ -28,8 +43,21 @@ export function useThesisStudio() {
   const [severityFilter, setSeverityFilter] = useState<IssueSeverity | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<IssueCategory | "all">("all");
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorDraft, setEditorDraft] = useState<CustomTemplateRecord | null>(null);
 
-  const template = useMemo(() => getTemplate(templateId), [templateId]);
+  const templates = useMemo(() => listAllTemplates(customRecords), [customRecords]);
+  const template = useMemo(() => resolveTemplate(templateId, customRecords), [templateId, customRecords]);
+
+  const recheck = useCallback(
+    (id: string, nextRecords = customRecords) => {
+      if (!model) return;
+      const next = runChecks(model, resolveTemplate(id, nextRecords));
+      setReport(next);
+      setActiveIssueId(next.issues[0]?.id ?? null);
+    },
+    [model, customRecords],
+  );
 
   const setTemplateId = useCallback(
     (id: string) => {
@@ -39,13 +67,9 @@ export function useThesisStudio() {
       } catch {
         /* ignore */
       }
-      if (model) {
-        const next = runChecks(model, getTemplate(id));
-        setReport(next);
-        setActiveIssueId(next.issues[0]?.id ?? null);
-      }
+      recheck(id);
     },
-    [model],
+    [recheck],
   );
 
   const reset = useCallback(() => {
@@ -68,7 +92,7 @@ export function useThesisStudio() {
       try {
         const buffer = await file.arrayBuffer();
         const parsed = await parseDocx(new Blob([buffer]), file.name);
-        const nextReport = runChecks(parsed, getTemplate(templateId));
+        const nextReport = runChecks(parsed, resolveTemplate(templateId, customRecords));
         setSourceBuffer(buffer);
         setModel(parsed);
         setReport(nextReport);
@@ -82,7 +106,7 @@ export function useThesisStudio() {
         setError(err instanceof Error ? err.message : "解析失败");
       }
     },
-    [templateId],
+    [templateId, customRecords],
   );
 
   const downloadFixed = useCallback(async () => {
@@ -90,7 +114,7 @@ export function useThesisStudio() {
     setFixing(true);
     setError(null);
     try {
-      const tpl = getTemplate(templateId);
+      const tpl = resolveTemplate(templateId, customRecords);
       const result = await fixDocx(sourceBuffer, tpl, fileName);
       const url = URL.createObjectURL(result.blob);
       const a = document.createElement("a");
@@ -99,7 +123,6 @@ export function useThesisStudio() {
       a.click();
       URL.revokeObjectURL(url);
 
-      // Re-check the fixed file so the UI reflects the improvement.
       const parsed = await parseDocx(result.blob, result.fileName);
       const nextReport = runChecks(parsed, tpl);
       const nextBuffer = await result.blob.arrayBuffer();
@@ -114,7 +137,40 @@ export function useThesisStudio() {
     } finally {
       setFixing(false);
     }
-  }, [sourceBuffer, fileName, templateId]);
+  }, [sourceBuffer, fileName, templateId, customRecords]);
+
+  const openCreateCustom = useCallback(() => {
+    setEditorDraft(createRecordFromTemplate(template));
+    setEditorOpen(true);
+  }, [template]);
+
+  const openEditCustom = useCallback(() => {
+    const existing = customRecords.find((item) => item.id === templateId);
+    if (!existing) return;
+    setEditorDraft({ ...existing, headings: existing.headings.map((h) => ({ ...h })) });
+    setEditorOpen(true);
+  }, [customRecords, templateId]);
+
+  const saveCustom = useCallback(
+    (record: CustomTemplateRecord) => {
+      const next = upsertCustomRecord(record);
+      setCustomRecords(next);
+      setTemplateId(record.id);
+      setEditorOpen(false);
+      setEditorDraft(null);
+      recheck(record.id, next);
+    },
+    [setTemplateId, recheck],
+  );
+
+  const removeCustom = useCallback(() => {
+    if (!templateId.startsWith("custom-")) return;
+    if (!window.confirm("确定删除这个自定义模板？")) return;
+    const next = deleteCustomRecord(templateId);
+    setCustomRecords(next);
+    setTemplateId("generic-gb");
+    recheck("generic-gb", next);
+  }, [templateId, setTemplateId, recheck]);
 
   const filteredIssues: CheckIssue[] = useMemo(() => {
     if (!report) return [];
@@ -141,7 +197,7 @@ export function useThesisStudio() {
   }, [model, activeIssue]);
 
   return {
-    templates: THESIS_TEMPLATES,
+    templates,
     template,
     templateId,
     setTemplateId,
@@ -165,5 +221,15 @@ export function useThesisStudio() {
     setActiveIssueId,
     activeIssue,
     previewParagraphs,
+    editorOpen,
+    editorDraft,
+    openCreateCustom,
+    openEditCustom,
+    saveCustom,
+    removeCustom,
+    closeEditor: () => {
+      setEditorOpen(false);
+      setEditorDraft(null);
+    },
   };
 }
