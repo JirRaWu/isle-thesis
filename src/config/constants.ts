@@ -16,3 +16,7 @@ export const ISLE_PHOTO_ORIGIN = viteEnv.VITE_ISLE_PHOTO_ORIGIN ?? "https://isle
 export const TEMPLATE_STORAGE_KEY = "isle-thesis-template-id";
 export const CUSTOM_TEMPLATES_KEY = "isle-thesis-custom-templates";
 export const AI_STORAGE_KEY = "isle-thesis-ai-config";
+
+/** Bundled demo thesis used by the「试用样例」button. */
+export const SAMPLE_THESIS_URL = `${viteEnv.BASE_URL ?? "/"}samples/${encodeURIComponent("测试论文-格式待查.docx")}`;
+export const SAMPLE_THESIS_NAME = "测试论文-格式待查.docx";

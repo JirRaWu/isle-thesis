@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { TEMPLATE_STORAGE_KEY } from "@/config/constants";
+import { SAMPLE_THESIS_NAME, SAMPLE_THESIS_URL, TEMPLATE_STORAGE_KEY } from "@/config/constants";
 import { runChecks } from "@/lib/check";
 import { describeApplied, fixDocx, parseDocx, type DocModel } from "@/lib/docx";
 import {
@@ -109,6 +109,24 @@ export function useThesisStudio() {
     [templateId, customRecords],
   );
 
+  const loadSample = useCallback(async () => {
+    setPhase("parsing");
+    setError(null);
+    setFixNote(null);
+    try {
+      const response = await fetch(SAMPLE_THESIS_URL);
+      if (!response.ok) throw new Error("样例文件加载失败");
+      const blob = await response.blob();
+      const file = new File([blob], SAMPLE_THESIS_NAME, {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      await analyze(file);
+    } catch (err) {
+      setPhase("error");
+      setError(err instanceof Error ? err.message : "样例加载失败");
+    }
+  }, [analyze]);
+
   const downloadFixed = useCallback(async () => {
     if (!sourceBuffer || !fileName) return;
     setFixing(true);
@@ -207,6 +225,7 @@ export function useThesisStudio() {
     phase,
     error,
     analyze,
+    loadSample,
     reset,
     downloadFixed,
     fixing,

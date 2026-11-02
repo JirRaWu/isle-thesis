@@ -55,7 +55,16 @@ export function ThesisStudio() {
                 </button>
               </div>
             ) : (
-              <UploadDropzone onFile={(file) => void studio.analyze(file)} />
+              <div className="space-y-3">
+                <UploadDropzone onFile={(file) => void studio.analyze(file)} />
+                <button
+                  type="button"
+                  onClick={() => void studio.loadSample()}
+                  className="w-full rounded-xl bg-brand/5 px-3 py-2.5 text-sm text-brand ring-1 ring-brand/15 transition hover:bg-brand/10"
+                >
+                  试用样例论文（含故意埋的格式问题）
+                </button>
+              </div>
             )}
             {studio.error && <p className="mt-2 text-xs text-danger">{studio.error}</p>}
           </div>
