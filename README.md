@@ -51,6 +51,10 @@ pnpm build
 
 Copy `.env.example` to `.env.local` if you need sibling product links.
 
+## Deploy
+
+Serve `dist/` as static files. nginx sample: [`deploy/nginx/30_isle-thesis.hhtj.cn_80_443.conf`](./deploy/nginx/30_isle-thesis.hhtj.cn_80_443.conf) (`isle-thesis.hhtj.cn`).
+
 ## License
 
 Apache-2.0. See [LICENSE](./LICENSE).

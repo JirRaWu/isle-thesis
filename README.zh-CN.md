@@ -57,6 +57,10 @@ VITE_ISLE_CV_ORIGIN=https://isle-cv.hhtj.cn
 VITE_ISLE_PHOTO_ORIGIN=https://isle-photo.hhtj.cn
 ```
 
+## 部署
+
+静态托管 `dist/` 即可。nginx 样例：[`deploy/nginx/30_isle-thesis.hhtj.cn_80_443.conf`](./deploy/nginx/30_isle-thesis.hhtj.cn_80_443.conf)（域名 `isle-thesis.hhtj.cn`，风格对齐证件照站）。
+
 ## 检查项一览
 
 | 类别 | 内容 |
