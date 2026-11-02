@@ -4,8 +4,10 @@ import { checkBodyTypography } from "./body";
 import { checkHeadings } from "./heading";
 import { resetIssueIds } from "./match";
 import { checkMargins, checkPage } from "./page";
+import { checkPagination } from "./pagination";
 import { checkReferences } from "./references";
 import { checkCaptions, checkEmptyRuns, checkStructure } from "./structure";
+import { checkToc } from "./toc";
 
 function summarize(issues: CheckReport["issues"]): CheckSummary {
   const errors = issues.filter((i) => i.severity === "error").length;
@@ -25,6 +27,8 @@ export function runChecks(model: DocModel, template: ThesisTemplate): CheckRepor
     ...checkHeadings(model, template),
     ...checkStructure(model, template),
     ...checkReferences(model),
+    ...checkPagination(model),
+    ...checkToc(model),
     ...checkCaptions(model, template),
     ...checkEmptyRuns(model, template),
   ];

@@ -12,7 +12,9 @@ export type IssueCategory =
   | "heading"
   | "structure"
   | "caption"
-  | "reference";
+  | "reference"
+  | "pagination"
+  | "toc";
 
 export interface FontSpec {
   /** Preferred Chinese / East-Asian font family names (any match passes). */

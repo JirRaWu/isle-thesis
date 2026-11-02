@@ -19,6 +19,8 @@ const CATEGORY_OPTIONS: { id: IssueCategory | "all"; label: string }[] = [
   { id: "structure", label: "结构" },
   { id: "caption", label: "题注" },
   { id: "reference", label: "文献" },
+  { id: "pagination", label: "页码" },
+  { id: "toc", label: "目录" },
 ];
 
 function severityTone(sev: IssueSeverity) {

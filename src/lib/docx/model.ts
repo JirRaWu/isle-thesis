@@ -62,10 +62,26 @@ export interface PageBox {
   footerTwip?: number;
 }
 
+export interface HeaderFooterPart {
+  path: string;
+  kind: "header" | "footer";
+  text: string;
+  hasPageNumberField: boolean;
+}
+
+export interface DocChrome {
+  parts: HeaderFooterPart[];
+  hasHeader: boolean;
+  hasFooter: boolean;
+  hasPageNumberField: boolean;
+  titlePage: boolean;
+}
+
 export interface DocModel {
   fileName: string;
   page: PageBox;
   defaults: { paragraph: ParagraphProps; run: RunProps };
   styles: Map<string, StyleDef>;
   paragraphs: DocParagraph[];
+  chrome: DocChrome;
 }

@@ -1,8 +1,9 @@
 import JSZip from "jszip";
-import { A4_HEIGHT_TWIP, A4_WIDTH_TWIP } from "./units";
+import { parseChrome } from "./chrome";
 import type { DocModel, DocParagraph, PageBox, ResolvedRun } from "./model";
 import { mergeParagraph, mergeRun, readParagraphProps, readRunProps } from "./props";
 import { detectOutlineLevel, parseStylesXml, resolveStyle, type StylesBundle } from "./styles";
+import { A4_HEIGHT_TWIP, A4_WIDTH_TWIP } from "./units";
 import { collectText, parseXml, wChild, wChildren, wIntAttr } from "./xml";
 
 const MAX_DOCX_BYTES = 40 * 1024 * 1024;
@@ -124,6 +125,7 @@ export async function parseDocx(file: File | Blob, fileName = "document.docx"): 
   const bundle = parseStylesXml(stylesXml);
   const page = readPageBox(documentXml);
   const paragraphs = readParagraphs(documentXml, bundle);
+  const chrome = await parseChrome(zip, documentXml);
 
   return {
     fileName,
@@ -131,5 +133,6 @@ export async function parseDocx(file: File | Blob, fileName = "document.docx"): 
     defaults: bundle.defaults,
     styles: bundle.styles,
     paragraphs,
+    chrome,
   };
 }
