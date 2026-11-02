@@ -4,6 +4,7 @@ import { checkBodyTypography } from "./body";
 import { checkHeadings } from "./heading";
 import { resetIssueIds } from "./match";
 import { checkMargins, checkPage } from "./page";
+import { checkReferences } from "./references";
 import { checkCaptions, checkEmptyRuns, checkStructure } from "./structure";
 
 function summarize(issues: CheckReport["issues"]): CheckSummary {
@@ -23,6 +24,7 @@ export function runChecks(model: DocModel, template: ThesisTemplate): CheckRepor
     ...checkBodyTypography(model, template),
     ...checkHeadings(model, template),
     ...checkStructure(model, template),
+    ...checkReferences(model),
     ...checkCaptions(model, template),
     ...checkEmptyRuns(model, template),
   ];
