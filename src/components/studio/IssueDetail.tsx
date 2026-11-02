@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isAiConfigured } from "@/config/ai-providers";
 import { explainIssue } from "@/lib/ai/client";
+import { guideStepsFor } from "@/lib/check/guides";
 import type { AiConfig } from "@/types/ai";
 import type { CheckIssue } from "@/types/thesis";
 
@@ -14,6 +15,11 @@ export function IssueDetail({ issue, aiConfig, onOpenAiSettings }: IssueDetailPr
   const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAdvice(null);
+    setError(null);
+  }, [issue?.id]);
 
   if (!issue) {
     return (
@@ -76,6 +82,15 @@ export function IssueDetail({ issue, aiConfig, onOpenAiSettings }: IssueDetailPr
       <div className="rounded-xl bg-ink/[0.03] px-3 py-2.5 text-sm text-ink/75">
         <p className="text-xs font-medium text-ink/45">修改建议</p>
         <p className="mt-1 leading-relaxed">{issue.fixHint}</p>
+      </div>
+
+      <div className="rounded-xl bg-white/80 px-3 py-2.5 text-sm text-ink/75 ring-1 ring-brand/10">
+        <p className="text-xs font-medium text-ink/45">Word 操作步骤</p>
+        <ol className="mt-2 list-decimal space-y-1 pl-4 leading-relaxed">
+          {guideStepsFor(issue).map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
